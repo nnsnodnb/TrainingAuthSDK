@@ -1,3 +1,7 @@
 # TrainingAuthSDK
 
-A description of this package.
+## Installation
+
+```ruby
+pod 'TrainingAuthSDK', :git => 'https://github.com/nnsnodnb/TrainingAuthSDK', :branch => 'main'
+```

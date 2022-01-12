@@ -1,7 +1,7 @@
 Pod::Spec.new do |spec|
     spec.name                  = "TrainingAuthSDK"
     spec.version               = "0.1.0"
-    spec.summary               = ""
+    spec.summary               = "https://github.com/nnsnodnb/training_webapi's iOS Auth SDK."
     spec.homepage              = "https://github.com/nnsnodnb/MultipleImageView"
     spec.swift_version         = "5.0"
     spec.license               = { :type => "MIT", :file => "LICENSE" }
