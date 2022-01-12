@@ -7,12 +7,11 @@ Pod::Spec.new do |spec|
     spec.license               = { :type => "MIT", :file => "LICENSE" }
     spec.author                = { "nnsnodnb" => "nnsnodnb@gmail.com" }
     spec.social_media_url      = "https://twitter.com/nnsnodnb"
-    spec.platform              = :ios
-    spec.platform              = :ios, "9.0"
-    spec.ios.deployment_target = "9.0"
+    spec.platform              = :ios, "10.0"
+    spec.ios.deployment_target = "10.0"
     spec.ios.framework         = "UIKit"
     spec.source                = { :git => "https://github.com/nnsnodnb/#{spec.name}.git", :tag => "#{spec.version}" }
-    spec.source_files          = "Sources/#{spec.name}/*.swift"
+    spec.source_files          = "Sources/**/*.{swift,h,m}"
 
     spec.dependency "APIKit", "~> 5.3.0"
     spec.dependency "KeychainAccess", "~> 4.2.2"
