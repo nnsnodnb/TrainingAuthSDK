@@ -48,7 +48,7 @@ public final class Auth {
                 case .nonHTTPURLResponse:
                     trainingError = .nonHTTPURLResponse
                 case .unacceptableStatusCode(let statusCode):
-                    trainingError = .unacceptableStatusCode(statusCode)
+                    trainingError = .unacceptableStatusCode(statusCode.rawValue)
                 case .unexpectedObject(let object):
                     trainingError = .unexpectedObject(object)
                 case .responseError(let error):
@@ -103,7 +103,7 @@ public final class Auth {
                 case .nonHTTPURLResponse:
                     trainingError = .nonHTTPURLResponse
                 case .unacceptableStatusCode(let statusCode):
-                    trainingError = .unacceptableStatusCode(statusCode)
+                    trainingError = .unacceptableStatusCode(statusCode.rawValue)
                 case .unexpectedObject(let object):
                     trainingError = .unexpectedObject(object)
                 case .responseError(let error):

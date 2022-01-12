@@ -14,7 +14,7 @@ public enum TrainingError: Swift.Error {
     case connection
     case request
     case nonHTTPURLResponse
-    case unacceptableStatusCode(StatusCode)
+    case unacceptableStatusCode(Int)
     case unexpectedObject(Any)
     case response(Error)
     case unknown(Error)
