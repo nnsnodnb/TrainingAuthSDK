@@ -45,7 +45,7 @@ public enum StatusCode: Int {
 
 // MARK: - CustomStringConvertible
 extension StatusCode: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         switch self {
         case .ok:
             return "OK"

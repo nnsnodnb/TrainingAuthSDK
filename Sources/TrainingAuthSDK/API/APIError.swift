@@ -5,6 +5,7 @@
 //  Created by Yuya Oka on 2022/01/12.
 //
 
+import APIKit
 import Foundation
 
 public enum APIError: Swift.Error, CustomStringConvertible {
@@ -52,14 +53,10 @@ public enum APIError: Swift.Error, CustomStringConvertible {
                     self = .unacceptableStatusCode(.init(code: statusCode))
                 case .unexpectedObject(let object):
                     self = .unexpectedObject(object)
-                @unknown default:
-                    self = .unknownError(error)
                 }
             case .responseError(let error as APIResponseError):
                 self = .responseError(error)
             case .responseError(let error):
-                self = .unknownError(error)
-            @unknown default:
                 self = .unknownError(error)
             }
         } else {
