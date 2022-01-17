@@ -38,6 +38,7 @@ public final class Auth {
             case .success(let response):
                 self?.secretStoreService.accessToken = response.access
                 self?.secretStoreService.refreshToken = response.refresh
+                handler(.success(()))
             case .failure(let error):
                 let trainingError: TrainingError
                 switch APIError(error: error) {
