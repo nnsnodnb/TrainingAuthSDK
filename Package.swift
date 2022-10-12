@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "TrainingAuthSDK",
     platforms: [
-        .iOS(.v10)
+        .iOS(.v11)
     ],
     products: [
         .library(
@@ -14,8 +14,14 @@ let package = Package(
             targets: ["TrainingAuthSDK"]),
     ],
     dependencies: [
-        .package(name: "APIKit", url: "https://github.com/ishkawa/APIKit.git", from: "5.3.0"),
-        .package(name: "KeychainAccess", url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "4.2.2")
+        .package(
+            name: "APIKit",
+            url: "https://github.com/ishkawa/APIKit.git",
+            .upToNextMajor(from: "5.3.0")),
+        .package(
+            name: "KeychainAccess",
+            url: "https://github.com/kishikawakatsumi/KeychainAccess.git",
+            .upToNextMajor(from: "4.2.2"))
     ],
     targets: [
         .target(
