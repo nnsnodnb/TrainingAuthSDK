@@ -63,12 +63,29 @@ public final class Auth {
         return task
     }
 
-    public func getIDToken(handler: @escaping (Result<String, TrainingError>) -> Void) {
+    public func getIDToken(forceRefresh: Bool = false,
+                           callbackQueue: APIKit.CallbackQueue? = nil,
+                           handler: @escaping (Result<String, TrainingError>) -> Void) {
         guard let accessToken = secretStoreService.accessToken else {
             handler(.failure(.noUser))
             return
         }
-        handler(.success(accessToken))
+        guard forceRefresh else {
+            handler(.success(accessToken))
+            return
+        }
+        refresh(callbackQueue: callbackQueue) { [weak self] result in
+            switch result {
+            case .success:
+                guard let accessToken = self?.secretStoreService.accessToken else  {
+                    handler(.failure(.noUser))
+                    return
+                }
+                handler(.success(accessToken))
+            case .failure(let error):
+                handler(.failure(error))
+            }
+        }
     }
 
     @discardableResult
