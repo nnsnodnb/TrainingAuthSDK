@@ -13,6 +13,7 @@ Pod::Spec.new do |spec|
     spec.source                = { :git => "https://github.com/nnsnodnb/#{spec.name}.git", :tag => "#{spec.version}" }
     spec.source_files          = "Sources/**/*.{swift,h,m}"
 
-    spec.dependency "APIKit", "~> 5.3.0"
-    spec.dependency "KeychainAccess", "~> 4.2.2"
+    spec.dependency "APIKit", "~> 5.0.0"
+    spec.dependency "KeychainAccess", "~> 4.0.0"
+    spec.dependency "JWTDecode", "~> 3.0.0"
   end

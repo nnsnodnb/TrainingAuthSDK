@@ -21,14 +21,19 @@ let package = Package(
         .package(
             name: "KeychainAccess",
             url: "https://github.com/kishikawakatsumi/KeychainAccess.git",
-            .upToNextMajor(from: "4.2.2"))
+            .upToNextMajor(from: "4.2.2")),
+        .package(
+            name: "JWTDecode",
+            url: "https://github.com/auth0/JWTDecode.swift.git",
+            .upToNextMajor(from: "3.0.0")),
     ],
     targets: [
         .target(
             name: "TrainingAuthSDK",
             dependencies: [
                 .product(name: "APIKit", package: "APIKit"),
-                .product(name: "KeychainAccess", package: "KeychainAccess")
+                .product(name: "KeychainAccess", package: "KeychainAccess"),
+                .product(name: "JWTDecode", package: "JWTDecode"),
             ]),
         .testTarget(
             name: "TrainingAuthSDKTests",
