@@ -7,6 +7,7 @@
 
 import APIKit
 import Foundation
+import JWTDecode
 
 public final class Auth {
     // MARK: - Properties
@@ -66,11 +67,12 @@ public final class Auth {
     public func getIDToken(forceRefresh: Bool = false,
                            callbackQueue: APIKit.CallbackQueue? = nil,
                            handler: @escaping (Result<String, TrainingError>) -> Void) {
-        guard let accessToken = secretStoreService.accessToken else {
+        guard let accessToken = secretStoreService.accessToken,
+              let jwtToken = try? decode(jwt: accessToken) else {
             handler(.failure(.noUser))
             return
         }
-        guard forceRefresh else {
+        guard forceRefresh || jwtToken.expired else {
             handler(.success(accessToken))
             return
         }
