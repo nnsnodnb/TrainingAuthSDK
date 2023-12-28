@@ -11,10 +11,6 @@ import JWTDecode
 
 public final class Auth {
     // MARK: - Properties
-    public var isLoggedIn: Bool {
-        return secretStoreService.accessToken != nil
-    }
-
     private let baseURL: URL
     private let secretStoreService: SecretStoreService
 
@@ -25,14 +21,16 @@ public final class Auth {
     }
 
     public func signIn(username: String, password: String, callbackQueue: CallbackQueue? = nil) async throws {
-        guard secretStoreService.accessToken == nil && secretStoreService.refreshToken == nil else {
+        async let accessToken = secretStoreService.getAccessToken()
+        async let refreshToken = secretStoreService.getRefreshToken()
+        guard await accessToken == nil, await refreshToken == nil else {
             throw TrainingError.existUser
         }
         let request = TrainingAPI.SignInRequest(baseURL: baseURL, username: username, password: password)
         do {
             let response = try await Session.shared.response(for: request, callbackQueue: callbackQueue)
-            secretStoreService.accessToken = response.access
-            secretStoreService.refreshToken = response.refresh
+            await secretStoreService.setAccessToken(response.access)
+            await secretStoreService.setRefreshToken(response.refresh)
         } catch {
             let trainingError: TrainingError
             switch APIError(error: error) {
@@ -55,50 +53,24 @@ public final class Auth {
         }
     }
 
-    @discardableResult
     public func signIn(
         username: String,
         password: String,
         callbackQueue: CallbackQueue? = nil,
         handler: @escaping (Result<Void, TrainingError>) -> Void
-    ) -> SessionTask? {
-        guard secretStoreService.accessToken == nil && secretStoreService.refreshToken == nil else {
-            handler(.failure(.existUser))
-            return nil
-        }
-        let request = TrainingAPI.SignInRequest(baseURL: baseURL, username: username, password: password)
-        let task = Session.shared.send(request, callbackQueue: callbackQueue) { [weak self] result in
-            switch result {
-            case .success(let response):
-                self?.secretStoreService.accessToken = response.access
-                self?.secretStoreService.refreshToken = response.refresh
+    ) {
+        Task {
+            do {
+                try await signIn(username: username, password: password, callbackQueue: callbackQueue)
                 handler(.success(()))
-            case let .failure(error):
-                let trainingError: TrainingError
-                switch APIError(error: error) {
-                case .connectionError:
-                    trainingError = .connection
-                case .requestError:
-                    trainingError = .request
-                case .nonHTTPURLResponse:
-                    trainingError = .nonHTTPURLResponse
-                case let .unacceptableStatusCode(statusCode):
-                    trainingError = .unacceptableStatusCode(statusCode.rawValue)
-                case let .unexpectedObject(object):
-                    trainingError = .unexpectedObject(object)
-                case let .responseError(error):
-                    trainingError = .response(error)
-                case let .unknownError(error):
-                    trainingError = .unknown(error)
-                }
-                handler(.failure(trainingError))
+            } catch {
+                handler(.failure(error as! TrainingError))
             }
         }
-        return task
     }
 
-    public func getIDToken(forceRefresh: Bool = false, callbackQueue: APIKit.CallbackQueue? = nil) async throws -> String {
-        guard let accessToken = secretStoreService.accessToken,
+    public func getIDToken(forceRefresh: Bool = false, callbackQueue: CallbackQueue? = nil) async throws -> String {
+        guard let accessToken = await secretStoreService.getAccessToken(),
               let jwtToken = try? decode(jwt: accessToken) else {
             throw TrainingError.noUser
         }
@@ -111,43 +83,34 @@ public final class Auth {
 
     public func getIDToken(
         forceRefresh: Bool = false,
-        callbackQueue: APIKit.CallbackQueue? = nil,
+        callbackQueue: CallbackQueue? = nil,
         handler: @escaping (Result<String, TrainingError>) -> Void
     ) {
-        guard let accessToken = secretStoreService.accessToken,
-              let jwtToken = try? decode(jwt: accessToken) else {
-            handler(.failure(.noUser))
-            return
-        }
-        guard forceRefresh || jwtToken.expired else {
-            handler(.success(accessToken))
-            return
-        }
-        refresh(callbackQueue: callbackQueue) { result in
-            switch result {
-            case let .success(accessToken):
+        Task {
+            do {
+                let accessToken = try await getIDToken(forceRefresh: forceRefresh, callbackQueue: callbackQueue)
                 handler(.success(accessToken))
-            case let .failure(error):
-                handler(.failure(error))
+            } catch {
+                handler(.failure(error as! TrainingError))
             }
         }
     }
 
-    public func refresh(callbackQueue: APIKit.CallbackQueue? = nil) async throws -> String {
-        guard let refreshToken = secretStoreService.refreshToken else {
+    public func refresh(callbackQueue: CallbackQueue? = nil) async throws -> String {
+        guard let refreshToken = await secretStoreService.getRefreshToken() else {
             throw TrainingError.noUser
         }
 
-        let currentAccessToken = secretStoreService.accessToken
-        secretStoreService.accessToken = nil
+        let currentAccessToken = await secretStoreService.getAccessToken()
+        await secretStoreService.setAccessToken(nil)
 
         let request = TrainingAPI.RefreshTokenRequest(baseURL: baseURL, refreshToken: refreshToken)
         do {
             let response = try await Session.shared.response(for: request, callbackQueue: callbackQueue)
-            secretStoreService.accessToken = response.access
-            guard secretStoreService.accessToken != currentAccessToken else {
+            await secretStoreService.setAccessToken(response.access)
+            guard await secretStoreService.getAccessToken() != currentAccessToken else {
                 // 戻しておく
-                secretStoreService.accessToken = currentAccessToken
+                await secretStoreService.setAccessToken(currentAccessToken)
                 throw TrainingError.failureAccessTokenRefresh
             }
             return response.access
@@ -173,57 +136,28 @@ public final class Auth {
         }
     }
 
-    @discardableResult
     public func refresh(
-        callbackQueue: APIKit.CallbackQueue? = nil,
+        callbackQueue: CallbackQueue? = nil,
         handler: @escaping (Result<String, TrainingError>) -> Void
-    ) -> SessionTask? {
-        guard let refreshToken = secretStoreService.refreshToken else {
-            handler(.failure(.noUser))
-            return nil
-        }
-
-        let currentAccessToken = secretStoreService.accessToken
-        secretStoreService.accessToken = nil
-
-        let request = TrainingAPI.RefreshTokenRequest(baseURL: baseURL, refreshToken: refreshToken)
-        let task = Session.shared.send(request, callbackQueue: callbackQueue) { [weak self] result in
-            switch result {
-            case .success(let response):
-                self?.secretStoreService.accessToken = response.access
-                guard self?.secretStoreService.accessToken != currentAccessToken else {
-                    // 戻しておく
-                    self?.secretStoreService.accessToken = currentAccessToken
-                    handler(.failure(.failureAccessTokenRefresh))
-                    return
-                }
-                handler(.success(response.access))
-            case let .failure(error):
-                let trainingError: TrainingError
-                switch APIError(error: error) {
-                case .connectionError:
-                    trainingError = .connection
-                case .requestError:
-                    trainingError = .request
-                case .nonHTTPURLResponse:
-                    trainingError = .nonHTTPURLResponse
-                case let .unacceptableStatusCode(statusCode):
-                    trainingError = .unacceptableStatusCode(statusCode.rawValue)
-                case let .unexpectedObject(object):
-                    trainingError = .unexpectedObject(object)
-                case let .responseError(error):
-                    trainingError = .response(error)
-                case let .unknownError(error):
-                    trainingError = .unknown(error)
-                }
-                handler(.failure(trainingError))
+    ) {
+        Task {
+            do {
+                let accessToken = try await refresh(callbackQueue: callbackQueue)
+                handler(.success(accessToken))
+            } catch {
+                handler(.failure(error as! TrainingError))
             }
         }
-        return task
+    }
+
+    public func signOut() async {
+        await secretStoreService.setAccessToken(nil)
+        await secretStoreService.setRefreshToken(nil)
     }
 
     public func signOut() {
-        secretStoreService.accessToken = nil
-        secretStoreService.refreshToken = nil
+        Task {
+            await signOut()
+        }
     }
 }

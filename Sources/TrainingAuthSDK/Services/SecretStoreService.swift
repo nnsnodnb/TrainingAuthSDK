@@ -9,29 +9,14 @@ import Foundation
 import KeychainAccess
 
 public protocol SecretStoreService: AnyObject {
-    var accessToken: String? { get set }
-    var refreshToken: String? { get set }
+    func getAccessToken() async -> String?
+    func getRefreshToken() async -> String?
+    func setAccessToken(_ accessToken: String?) async
+    func setRefreshToken(_ refreshToken: String?) async
 }
 
-public final class SecretStoreServiceImpl: SecretStoreService {
+public final actor SecretStoreServiceImpl: SecretStoreService {
     // MARK: - Properties
-    public var accessToken: String? {
-        get {
-            return object(forKey: .accessToken)
-        }
-        set {
-            set(newValue, forKey: .accessToken)
-        }
-    }
-    public var refreshToken: String? {
-        get {
-            return object(forKey: .refreshToken)
-        }
-        set {
-            set(newValue, forKey: .refreshToken)
-        }
-    }
-
     private let keychain: Keychain
     private let jsonDecoder = JSONDecoder()
     private let jsonEncoder = JSONEncoder()
@@ -46,6 +31,22 @@ public final class SecretStoreServiceImpl: SecretStoreService {
     public init() {
         self.keychain = .init(service: "moe.nnsnodnb.training-auth-sdk.secret")
             .accessibility(.whenUnlockedThisDeviceOnly)
+    }
+
+    public func getAccessToken() -> String? {
+        object(forKey: .accessToken)
+    }
+
+    public func getRefreshToken() -> String? {
+        object(forKey: .refreshToken)
+    }
+
+    public func setAccessToken(_ accessToken: String?) {
+        set(accessToken, forKey: .accessToken)
+    }
+
+    public func setRefreshToken(_ refreshToken: String?) {
+        set(refreshToken, forKey: .refreshToken)
     }
 }
 
