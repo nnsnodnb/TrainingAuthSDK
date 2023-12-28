@@ -17,7 +17,7 @@ let package = Package(
         .package(
             name: "APIKit",
             url: "https://github.com/ishkawa/APIKit.git",
-            .upToNextMajor(from: "5.3.0")),
+            .upToNextMajor(from: "5.4.0")),
         .package(
             name: "KeychainAccess",
             url: "https://github.com/kishikawakatsumi/KeychainAccess.git",
@@ -25,7 +25,7 @@ let package = Package(
         .package(
             name: "JWTDecode",
             url: "https://github.com/auth0/JWTDecode.swift.git",
-            .upToNextMajor(from: "3.0.0")),
+            .upToNextMajor(from: "3.1.0")),
     ],
     targets: [
         .target(
